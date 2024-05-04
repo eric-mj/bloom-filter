@@ -10,5 +10,3 @@ edition = "2021"
 [lints.clippy]
 needless_return = "allow"
 
-[lints.rust]
-needless_return = "allow"

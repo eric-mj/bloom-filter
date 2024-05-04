@@ -1,4 +1,7 @@
-use std::hash::{DefaultHasher, Hash, Hasher};
+use std::{
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::Add,
+};
 
 pub struct BloomFilter {
     filter: Vec<bool>,
@@ -13,14 +16,15 @@ impl BloomFilter {
         };
     }
 
-    // This shouldn't require Clone but I don't want to deal with lifetimes right now
     fn add<T>(&mut self, value: &T)
     where
-        T: Hash + From<u32> + std::ops::Add<Output = T> + Clone,
+        for<'a> &'a T: Hash + Add<Output = T> + Add<T, Output = T>,
+        T: Hash + From<u32>,
     {
         let mut h = DefaultHasher::new();
         for hash_num in 0u32..self.num_hashes {
-            let v: T = value.clone() + hash_num.into();
+            let q: T = hash_num.into();
+            let v: T = value + q;
             v.hash(&mut h);
             let idx = h.finish() % self.num_hashes as u64;
             *self.filter.get_mut(idx as usize).unwrap() = true;
@@ -29,11 +33,13 @@ impl BloomFilter {
 
     fn may_contain<T>(&self, value: &T) -> bool
     where
-        T: Hash + From<u32> + std::ops::Add<Output = T> + Clone,
+        for<'a> &'a T: Hash + Add<Output = T> + Add<T, Output = T>,
+        T: Hash + From<u32>,
     {
         let mut h = DefaultHasher::new();
         for hash_num in 0u32..self.num_hashes {
-            let v: T = value.clone() + hash_num.into();
+            let q: T = hash_num.into();
+            let v: T = value + q;
             v.hash(&mut h);
             let idx = h.finish() % self.num_hashes as u64;
             if !self.filter.get(idx as usize).unwrap() {
