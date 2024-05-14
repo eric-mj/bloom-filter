@@ -53,11 +53,15 @@ impl BloomFilter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
+    proptest! {
 
-    #[test]
-    fn test_bloomfilter() {
-        let mut bloom_filter = BloomFilter::new(10, 3);
-        bloom_filter.add(&15u32);
-        assert_eq!(bloom_filter.may_contain(&15u32), true);
+
+        #[test]
+        fn test_bloomfilter(s in 0u32..1_000_000) {
+            let mut bloom_filter = BloomFilter::new(10, 3);
+            bloom_filter.add(&s);
+            prop_assert_eq!(bloom_filter.may_contain(&s), true);
+        }
     }
 }
